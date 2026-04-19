@@ -22,10 +22,6 @@ from pipeline.models import Chunk, ProcessedDocument, RetrievedChunk
 from pipeline.retriever import DocumentIndex, format_retrieved_context
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 def _make_doc(source_file: str, doc_type: str, text: str) -> ProcessedDocument:
     return ProcessedDocument(
         source_file=source_file,
@@ -43,11 +39,6 @@ def _mock_encode(texts, **kwargs):
     for i in range(n):
         embs[i, i % 384] = 1.0
     return embs
-
-
-# ---------------------------------------------------------------------------
-# Chunking
-# ---------------------------------------------------------------------------
 
 class TestChunking:
 
@@ -81,10 +72,6 @@ class TestChunking:
         assert len(chunks) == 0
 
 
-# ---------------------------------------------------------------------------
-# Index building
-# ---------------------------------------------------------------------------
-
 class TestIndexBuilding:
 
     def test_index_empty_before_build(self):
@@ -107,11 +94,6 @@ class TestIndexBuilding:
             mock_model.return_value.encode = _mock_encode
             index.index(docs)
         assert index.chunk_count >= 2
-
-
-# ---------------------------------------------------------------------------
-# Retrieval
-# ---------------------------------------------------------------------------
 
 class TestRetrieval:
 
@@ -154,10 +136,6 @@ class TestRetrieval:
         for r in results:
             assert r.chunk.doc_type == "court_order"
 
-
-# ---------------------------------------------------------------------------
-# format_retrieved_context
-# ---------------------------------------------------------------------------
 
 class TestFormatRetrievedContext:
 

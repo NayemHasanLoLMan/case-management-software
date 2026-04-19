@@ -26,11 +26,6 @@ from pipeline.learner import (
     compare_drafts,
 )
 
-
-# ---------------------------------------------------------------------------
-# _strip_code_fences
-# ---------------------------------------------------------------------------
-
 class TestStripCodeFences:
 
     def test_strips_json_fence(self):
@@ -52,10 +47,6 @@ class TestStripCodeFences:
         result = _strip_code_fences(text)
         assert result == '{"key": 1}'
 
-
-# ---------------------------------------------------------------------------
-# analyze_edit_pair
-# ---------------------------------------------------------------------------
 
 SAMPLE_PAIR = {
     "draft_type": "title_review_summary",
@@ -115,10 +106,6 @@ class TestAnalyzeEditPair:
         assert "organized sections" in captured[0]
 
 
-# ---------------------------------------------------------------------------
-# build_style_guide
-# ---------------------------------------------------------------------------
-
 class TestBuildStyleGuide:
 
     def test_returns_correct_structure(self, tmp_path):
@@ -164,10 +151,6 @@ class TestBuildStyleGuide:
         assert "case_status_memo" in types
 
 
-# ---------------------------------------------------------------------------
-# format_style_guide_for_prompt
-# ---------------------------------------------------------------------------
-
 class TestFormatStyleGuideForPrompt:
 
     @pytest.fixture
@@ -196,10 +179,6 @@ class TestFormatStyleGuideForPrompt:
         assert "include instrument numbers" in result
         assert "prioritize action items" in result
 
-
-# ---------------------------------------------------------------------------
-# compare_drafts
-# ---------------------------------------------------------------------------
 
 class TestCompareDrafts:
 

@@ -101,11 +101,6 @@ def _build_draft(
 
     return DraftOutput(draft_type=draft_type, content=content, sources=chunks)
 
-
-# ---------------------------------------------------------------------------
-# Draft generators
-# ---------------------------------------------------------------------------
-
 def generate_title_review_summary(
     index: DocumentIndex,
     docs: list[ProcessedDocument],  # noqa: ARG001 — kept for consistent signature

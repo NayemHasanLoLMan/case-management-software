@@ -46,10 +46,6 @@ class DocumentIndex:
         self._chunks: list[Chunk] = []
         self._matrix: Optional[np.ndarray] = None  # (n_chunks, embed_dim)
 
-    # ------------------------------------------------------------------
-    # Private helpers
-    # ------------------------------------------------------------------
-
     def _get_model(self) -> SentenceTransformer:
         """Lazy-load the embedding model so startup is fast when not needed."""
         if self._model is None:
@@ -87,10 +83,6 @@ class DocumentIndex:
             )
 
         return chunks
-
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
 
     def index(self, documents: list[ProcessedDocument]) -> None:
         """Build the index from a list of processed documents."""

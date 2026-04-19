@@ -28,11 +28,6 @@ from pipeline.processor import (
     process_all_documents,
 )
 
-
-# ---------------------------------------------------------------------------
-# OCR cleanup
-# ---------------------------------------------------------------------------
-
 class TestCleanOcrNoise:
 
     def test_digit_one_inside_word(self):
@@ -71,11 +66,6 @@ class TestCleanOcrNoise:
         result = _clean_ocr_noise("Section 10 applies")
         assert "10" in result
 
-
-# ---------------------------------------------------------------------------
-# Document type detection
-# ---------------------------------------------------------------------------
-
 class TestDetectDocType:
 
     def test_title_search_page1(self):
@@ -93,11 +83,6 @@ class TestDetectDocType:
     def test_unknown_file(self):
         assert _detect_doc_type("random_document") == "unknown"
 
-
-# ---------------------------------------------------------------------------
-# Prompt structure
-# ---------------------------------------------------------------------------
-
 class TestBuildExtractionPrompt:
 
     def test_contains_document_text(self):
@@ -111,11 +96,6 @@ class TestBuildExtractionPrompt:
     def test_unknown_type_still_returns_prompt(self):
         prompt = _build_extraction_prompt("unknown", "text")
         assert len(prompt) > 20
-
-
-# ---------------------------------------------------------------------------
-# process_document with mocked LLM
-# ---------------------------------------------------------------------------
 
 class TestProcessDocument:
 
@@ -153,11 +133,6 @@ class TestProcessDocument:
 
         # the raw text must be exactly as read from disk
         assert result.raw_text == raw
-
-
-# ---------------------------------------------------------------------------
-# process_all_documents
-# ---------------------------------------------------------------------------
 
 class TestProcessAllDocuments:
 

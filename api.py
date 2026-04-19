@@ -44,10 +44,6 @@ from pipeline.retriever import DocumentIndex
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# App setup
-# ---------------------------------------------------------------------------
-
 app = FastAPI(
     title="AI Case Management Pipeline",
     description="Document processing, retrieval, and draft generation for legal cases.",
@@ -73,11 +69,6 @@ _state: dict = {
     "style_guide": {},
 }
 
-
-# ---------------------------------------------------------------------------
-# Request / response models
-# ---------------------------------------------------------------------------
-
 class RetrieveRequest(BaseModel):
     query: str
     top_k: int = 5
@@ -90,18 +81,12 @@ class GenerateRequest(BaseModel):
 
 
 class LearnRequest(BaseModel):
-    # each item must have system_draft, operator_edited_version, draft_type, key_edits
     edit_pairs: list[dict]
 
 
 class CompareRequest(BaseModel):
     baseline: str
     improved: str
-
-
-# ---------------------------------------------------------------------------
-# Endpoints
-# ---------------------------------------------------------------------------
 
 @app.get("/health")
 def health():

@@ -28,11 +28,6 @@ from pipeline.generator import (
 from pipeline.models import Chunk, ProcessedDocument, RetrievedChunk
 from pipeline.retriever import DocumentIndex
 
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 def _make_doc(source_file: str, doc_type: str) -> ProcessedDocument:
     return ProcessedDocument(
         source_file=source_file,
@@ -59,11 +54,6 @@ def _make_index_with_fake_retrieve():
     index.retrieve.side_effect = _fake_retrieve
     index.retrieve_for_doc_type.side_effect = _fake_retrieve
     return index
-
-
-# ---------------------------------------------------------------------------
-# Generator tests
-# ---------------------------------------------------------------------------
 
 class TestGenerateWithMockedLLM:
 
@@ -137,11 +127,6 @@ class TestGenerateWithMockedLLM:
 
         assert "always include deadlines" in captured[0]
 
-
-# ---------------------------------------------------------------------------
-# GENERATORS registry
-# ---------------------------------------------------------------------------
-
 class TestGeneratorsRegistry:
 
     def test_all_four_types_registered(self):
@@ -156,11 +141,6 @@ class TestGeneratorsRegistry:
     def test_all_registered_values_are_callable(self):
         for name, fn in GENERATORS.items():
             assert callable(fn), f"{name} is not callable"
-
-
-# ---------------------------------------------------------------------------
-# generate_all_drafts
-# ---------------------------------------------------------------------------
 
 class TestGenerateAllDrafts:
 

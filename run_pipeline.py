@@ -37,10 +37,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 def _check_api_key() -> None:
     if not GEMINI_API_KEY:
         print(
@@ -61,26 +57,14 @@ def _save(name: str, content: str) -> Path:
 
 
 def _separator(label: str) -> None:
-    print(f"\n{'=' * 60}")
     print(f"  {label}")
-    print(f"{'=' * 60}\n")
-
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 
 def main() -> None:
     _check_api_key()
 
-    print("\n" + "=" * 60)
     print("  AI Case Management Pipeline")
     print("  Rodriguez Case — 2025-FC-08891")
-    print("=" * 60)
 
-    # -----------------------------------------------------------------------
-    # Part 1: Document Processing
-    # -----------------------------------------------------------------------
     _separator("Part 1: Document Processing")
     docs = process_all_documents()
 
@@ -100,9 +84,6 @@ def main() -> None:
     _save("01_extraction_results.json", json.dumps(extraction_summary, indent=2, ensure_ascii=False))
     print(f"Processed {len(docs)} documents.\n")
 
-    # -----------------------------------------------------------------------
-    # Part 2: Index Building + Retrieval Demo
-    # -----------------------------------------------------------------------
     _separator("Part 2: Retrieval Index")
     index = DocumentIndex()
     index.index(docs)
@@ -123,9 +104,6 @@ def main() -> None:
         print(line)
     print()
 
-    # -----------------------------------------------------------------------
-    # Part 3: Baseline Draft Generation
-    # -----------------------------------------------------------------------
     _separator("Part 3: Baseline Draft Generation")
     baseline_drafts = generate_all_drafts(
         index, docs,
@@ -138,9 +116,6 @@ def main() -> None:
         print(f"Generated {draft.draft_type} ({len(draft.content)} chars)")
     print()
 
-    # -----------------------------------------------------------------------
-    # Part 4: Learning from Operator Edits
-    # -----------------------------------------------------------------------
     _separator("Part 4: Learning from Operator Edits")
 
     edit_pairs = load_edit_pairs()
@@ -166,12 +141,7 @@ def main() -> None:
     print("Improvement evaluation:\n")
     print(evaluation)
 
-    # -----------------------------------------------------------------------
-    # Summary
-    # -----------------------------------------------------------------------
-    print("\n" + "=" * 60)
     print("  Pipeline complete. Outputs in sample_outputs/:")
-    print("=" * 60)
     all_outputs = sorted(OUTPUT_DIR.glob("0*.txt")) + sorted(OUTPUT_DIR.glob("0*.json"))
     for path in all_outputs:
         size_kb = path.stat().st_size / 1024
