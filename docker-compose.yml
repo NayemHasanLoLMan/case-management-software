@@ -1,0 +1,17 @@
+services:
+  pipeline:
+    build: .
+    env_file: .env
+    volumes:
+      # mount the outputs directory so generated files are accessible on the host
+      - ./sample_outputs:/app/sample_outputs
+    command: python run_pipeline.py
+
+  api:
+    build: .
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./sample_outputs:/app/sample_outputs
+    command: uvicorn api:app --host 0.0.0.0 --port 8000

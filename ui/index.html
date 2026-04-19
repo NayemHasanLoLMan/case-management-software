@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Case Management — Document Pipeline</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --border:    #2e3245;
+      --accent:    #4f7cff;
+      --accent-dim:#3a5bcc;
+      --text:      #e2e5f0;
+      --text-dim:  #8892aa;
+      --success:   #34d399;
+      --warn:      #fbbf24;
+      --danger:    #f87171;
+      --radius:    8px;
+      --font:      'Inter', system-ui, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ------- layout ------- */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header h1 { font-size: 18px; font-weight: 600; }
+    header span { color: var(--text-dim); font-size: 13px; }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 24px;
+    }
+
+    /* ------- sidebar nav ------- */
+    nav { display: flex; flex-direction: column; gap: 4px; }
+
+    nav button {
+      text-align: left;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 14px;
+      font-family: var(--font);
+      transition: background 0.15s, color 0.15s;
+    }
+    nav button:hover { background: var(--surface); color: var(--text); }
+    nav button.active { background: var(--surface); color: var(--accent); font-weight: 500; }
+
+    /* ------- panels ------- */
+    .panel { display: none; flex-direction: column; gap: 20px; }
+    .panel.active { display: flex; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+
+    /* ------- form elements ------- */
+    label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 6px; }
+
+    input[type="text"], input[type="file"], select, textarea {
+      width: 100%;
+      background: #13152099;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      padding: 9px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input[type="text"]:focus, textarea:focus, select:focus {
+      border-color: var(--accent);
+    }
+    textarea { resize: vertical; min-height: 120px; }
+
+    .row { display: flex; gap: 12px; align-items: flex-end; }
+    .row > * { flex: 1; }
+
+    /* ------- buttons ------- */
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 9px 20px;
+      font-size: 13px;
+      font-family: var(--font);
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .btn:hover { background: var(--accent-dim); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn.secondary {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn.secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ------- output area ------- */
+    .output-box {
+      background: #0b0d1499;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      font-size: 13px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 520px;
+      overflow-y: auto;
+      color: var(--text);
+      line-height: 1.7;
+    }
+    .output-box.empty { color: var(--text-dim); font-style: italic; }
+
+    /* ------- status badge ------- */
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+    .badge.ok { background: #34d39920; color: var(--success); }
+    .badge.warn { background: #fbbf2420; color: var(--warn); }
+    .badge.err { background: #f8717120; color: var(--danger); }
+
+    /* ------- sources table ------- */
+    .sources { margin-top: 12px; }
+    .sources span { font-size: 12px; color: var(--text-dim); }
+    .source-item {
+      background: #0b0d14;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-top: 6px;
+      font-size: 12px;
+    }
+    .source-item .file { color: var(--accent); font-weight: 500; }
+    .source-item .score { color: var(--text-dim); margin-left: 8px; }
+    .source-item .preview { color: var(--text-dim); margin-top: 4px; }
+
+    /* ------- spinner ------- */
+    .spinner {
+      display: none;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-left: 8px;
+    }
+    .spinner.active { display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ------- chip group ------- */
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+    .chip {
+      background: #1e2235;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: border-color 0.1s;
+    }
+    .chip.selected { border-color: var(--accent); color: var(--accent); background: #4f7cff18; }
+
+    p.note { font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4f7cff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+    <polyline points="14 2 14 8 20 8"/>
+    <line x1="16" y1="13" x2="8" y2="13"/>
+    <line x1="16" y1="17" x2="8" y2="17"/>
+    <polyline points="10 9 9 9 8 9"/>
+  </svg>
+  <h1>AI Case Management Pipeline</h1>
+  <span id="health-badge" class="badge warn">checking...</span>
+</header>
+
+<main>
+  <nav>
+    <button class="active" data-panel="upload">Upload Documents</button>
+    <button data-panel="retrieve">Retrieval</button>
+    <button data-panel="generate">Generate Draft</button>
+    <button data-panel="learn">Learn from Edits</button>
+    <button data-panel="compare">Compare Drafts</button>
+  </nav>
+
+  <!-- ====== Upload ====== -->
+  <div id="panel-upload" class="panel active">
+    <div class="card">
+      <h2>Upload &amp; Process Documents</h2>
+      <label>Select one or more .txt document files</label>
+      <input type="file" id="file-input" multiple accept=".txt" />
+      <p class="note">Supported types: title_search_page1.txt, title_search_page2.txt, servicer_email.txt, court_order.txt</p>
+      <br />
+      <button class="btn" id="btn-upload" onclick="uploadDocs()">Process Documents</button>
+      <span class="spinner" id="spin-upload"></span>
+    </div>
+    <div class="card">
+      <h2>Result</h2>
+      <div class="output-box empty" id="out-upload">No documents processed yet.</div>
+    </div>
+  </div>
+
+  <!-- ====== Retrieve ====== -->
+  <div id="panel-retrieve" class="panel">
+    <div class="card">
+      <h2>Retrieval Query</h2>
+      <div class="row">
+        <div>
+          <label>Query</label>
+          <input type="text" id="retrieve-query" placeholder="e.g. HOA lis pendens amount instrument number" />
+        </div>
+        <div style="max-width:90px">
+          <label>Top K</label>
+          <input type="text" id="retrieve-topk" value="5" />
+        </div>
+      </div>
+      <br />
+      <label>Filter by document type (optional)</label>
+      <select id="retrieve-doctype">
+        <option value="">All documents</option>
+        <option value="title_search">Title Search</option>
+        <option value="servicer_email">Servicer Email</option>
+        <option value="court_order">Court Order</option>
+      </select>
+      <br /><br />
+      <button class="btn" onclick="runRetrieve()">Retrieve</button>
+      <span class="spinner" id="spin-retrieve"></span>
+    </div>
+    <div class="card">
+      <h2>Retrieved Chunks</h2>
+      <div class="output-box empty" id="out-retrieve">Run a query above to see results.</div>
+    </div>
+  </div>
+
+  <!-- ====== Generate ====== -->
+  <div id="panel-generate" class="panel">
+    <div class="card">
+      <h2>Generate Draft</h2>
+      <label>Draft type</label>
+      <div class="chips">
+        <div class="chip selected" data-type="title_review_summary" onclick="selectDraftType(this)">Title Review Summary</div>
+        <div class="chip" data-type="case_status_memo" onclick="selectDraftType(this)">Case Status Memo</div>
+        <div class="chip" data-type="document_checklist" onclick="selectDraftType(this)">Document Checklist</div>
+        <div class="chip" data-type="action_item_extract" onclick="selectDraftType(this)">Action Item Extract</div>
+      </div>
+      <br />
+      <label>
+        <input type="checkbox" id="use-style-guide" checked />
+        Apply learned style guide (if one has been built)
+      </label>
+      <br /><br />
+      <button class="btn" onclick="generateDraft()">Generate</button>
+      <span class="spinner" id="spin-generate"></span>
+    </div>
+    <div class="card">
+      <h2>Draft Output</h2>
+      <div class="output-box empty" id="out-generate">Select a draft type and click Generate.</div>
+      <div class="sources" id="out-generate-sources"></div>
+    </div>
+  </div>
+
+  <!-- ====== Learn ====== -->
+  <div id="panel-learn" class="panel">
+    <div class="card">
+      <h2>Learn from Operator Edits</h2>
+      <p class="note">Paste a JSON array of edit pairs. Each object needs: draft_type, system_draft, operator_edited_version, key_edits.</p>
+      <br />
+      <label>Edit pairs JSON</label>
+      <textarea id="learn-input" placeholder='[{"draft_type": "title_review_summary", "system_draft": "...", "operator_edited_version": "...", "key_edits": ["..."]}]'></textarea>
+      <br /><br />
+      <button class="btn" onclick="loadSampleEdits()">Load Sample Edits from API</button>
+      &nbsp;
+      <button class="btn" onclick="runLearn()">Build Style Guide</button>
+      <span class="spinner" id="spin-learn"></span>
+    </div>
+    <div class="card">
+      <h2>Result</h2>
+      <div class="output-box empty" id="out-learn">Style guide will appear here after processing.</div>
+    </div>
+  </div>
+
+  <!-- ====== Compare ====== -->
+  <div id="panel-compare" class="panel">
+    <div class="card">
+      <h2>Compare Two Drafts</h2>
+      <label>Baseline draft</label>
+      <textarea id="compare-baseline" placeholder="Paste the original system-generated draft here..."></textarea>
+      <br />
+      <label>Improved draft</label>
+      <textarea id="compare-improved" placeholder="Paste the operator-edited or improved draft here..."></textarea>
+      <br /><br />
+      <button class="btn" onclick="runCompare()">Evaluate Improvement</button>
+      <span class="spinner" id="spin-compare"></span>
+    </div>
+    <div class="card">
+      <h2>Evaluation</h2>
+      <div class="output-box empty" id="out-compare">Comparison result will appear here.</div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const API = window.location.origin; // same origin as the FastAPI server
+
+  // ------------------------------------------------------------------
+  // Nav
+  // ------------------------------------------------------------------
+  document.querySelectorAll('nav button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('panel-' + btn.dataset.panel).classList.add('active');
+    });
+  });
+
+  // ------------------------------------------------------------------
+  // Health check
+  // ------------------------------------------------------------------
+  async function checkHealth() {
+    try {
+      const r = await fetch(`${API}/health`);
+      const data = await r.json();
+      const badge = document.getElementById('health-badge');
+      if (data.status === 'ok' && data.api_key_set) {
+        badge.textContent = 'API connected';
+        badge.className = 'badge ok';
+      } else {
+        badge.textContent = 'API key missing';
+        badge.className = 'badge warn';
+      }
+    } catch {
+      document.getElementById('health-badge').textContent = 'API offline';
+      document.getElementById('health-badge').className = 'badge err';
+    }
+  }
+  checkHealth();
+
+  // ------------------------------------------------------------------
+  // Helpers
+  // ------------------------------------------------------------------
+  function spin(id, on) {
+    document.getElementById(id).classList.toggle('active', on);
+  }
+
+  function setOutput(id, text, empty = false) {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.classList.toggle('empty', empty);
+  }
+
+  async function apiFetch(path, options = {}) {
+    const r = await fetch(`${API}${path}`, options);
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({ detail: r.statusText }));
+      throw new Error(err.detail || r.statusText);
+    }
+    return r.json();
+  }
+
+  // ------------------------------------------------------------------
+  // Upload
+  // ------------------------------------------------------------------
+  async function uploadDocs() {
+    const files = document.getElementById('file-input').files;
+    if (!files.length) { alert('Select at least one file.'); return; }
+
+    spin('spin-upload', true);
+    const fd = new FormData();
+    for (const f of files) fd.append('files', f);
+
+    try {
+      const data = await apiFetch('/process', { method: 'POST', body: fd });
+      const lines = [`Processed ${data.processed} document(s):\n`];
+      for (const d of data.documents) {
+        lines.push(`  ${d.source_file}  [${d.doc_type}]  ${d.chunks} chunks  keys: ${d.extracted_keys.join(', ') || 'none'}`);
+      }
+      setOutput('out-upload', lines.join('\n'));
+    } catch (e) {
+      setOutput('out-upload', `Error: ${e.message}`);
+    } finally {
+      spin('spin-upload', false);
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // Retrieve
+  // ------------------------------------------------------------------
+  async function runRetrieve() {
+    const query = document.getElementById('retrieve-query').value.trim();
+    if (!query) { alert('Enter a query.'); return; }
+
+    spin('spin-retrieve', true);
+    const body = {
+      query,
+      top_k: parseInt(document.getElementById('retrieve-topk').value) || 5,
+      doc_type: document.getElementById('retrieve-doctype').value || null,
+    };
+
+    try {
+      const data = await apiFetch('/retrieve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      const lines = data.results.map((r, i) =>
+        `[${i + 1}] ${r.source_file}  score=${r.score}\n${r.text}\n`
+      );
+      setOutput('out-retrieve', lines.join('\n---\n'));
+    } catch (e) {
+      setOutput('out-retrieve', `Error: ${e.message}`);
+    } finally {
+      spin('spin-retrieve', false);
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // Generate
+  // ------------------------------------------------------------------
+  function selectDraftType(el) {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  async function generateDraft() {
+    const chip = document.querySelector('.chip.selected');
+    if (!chip) { alert('Select a draft type.'); return; }
+
+    spin('spin-generate', true);
+    document.getElementById('out-generate-sources').innerHTML = '';
+
+    try {
+      const data = await apiFetch('/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          draft_type: chip.dataset.type,
+          use_style_guide: document.getElementById('use-style-guide').checked,
+        }),
+      });
+
+      setOutput('out-generate', data.content);
+
+      const sourcesEl = document.getElementById('out-generate-sources');
+      if (data.sources && data.sources.length) {
+        sourcesEl.innerHTML = '<span>Sources used:</span>';
+        for (const s of data.sources) {
+          sourcesEl.insertAdjacentHTML('beforeend', `
+            <div class="source-item">
+              <span class="file">${s.source_file}</span>
+              <span class="score">relevance: ${s.score}</span>
+              <div class="preview">${s.text_preview}</div>
+            </div>
+          `);
+        }
+      }
+    } catch (e) {
+      setOutput('out-generate', `Error: ${e.message}`);
+    } finally {
+      spin('spin-generate', false);
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // Learn
+  // ------------------------------------------------------------------
+  async function loadSampleEdits() {
+    // fetch the sample_edits.json that the server has on disk
+    // we use the /docs endpoint indirectly — just read the file via a static path if available
+    try {
+      const r = await fetch('/ai_engineer_assignment_data/sample_edits.json');
+      if (r.ok) {
+        const text = await r.text();
+        document.getElementById('learn-input').value = text;
+        return;
+      }
+    } catch {}
+    alert('Could not load sample edits from server. Paste the JSON manually.');
+  }
+
+  async function runLearn() {
+    const raw = document.getElementById('learn-input').value.trim();
+    if (!raw) { alert('Paste edit pairs JSON first.'); return; }
+
+    let pairs;
+    try { pairs = JSON.parse(raw); } catch { alert('Invalid JSON.'); return; }
+
+    spin('spin-learn', true);
+    try {
+      const data = await apiFetch('/learn', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ edit_pairs: pairs }),
+      });
+
+      const lines = [
+        data.message,
+        '',
+        'Patterns extracted per draft type:',
+        ...Object.entries(data.patterns_extracted).map(([k, v]) => `  ${k}: ${v} patterns`),
+        '',
+        `Style guide saved to: ${data.style_guide_path}`,
+      ];
+      setOutput('out-learn', lines.join('\n'));
+    } catch (e) {
+      setOutput('out-learn', `Error: ${e.message}`);
+    } finally {
+      spin('spin-learn', false);
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // Compare
+  // ------------------------------------------------------------------
+  async function runCompare() {
+    const baseline = document.getElementById('compare-baseline').value.trim();
+    const improved = document.getElementById('compare-improved').value.trim();
+    if (!baseline || !improved) { alert('Paste both drafts.'); return; }
+
+    spin('spin-compare', true);
+    try {
+      const data = await apiFetch('/compare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ baseline, improved }),
+      });
+      setOutput('out-compare', data.evaluation);
+    } catch (e) {
+      setOutput('out-compare', `Error: ${e.message}`);
+    } finally {
+      spin('spin-compare', false);
+    }
+  }
+</script>
+
+</body>
+</html>

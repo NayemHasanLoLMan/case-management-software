@@ -1,0 +1,25 @@
+# Environments
+.env
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Project-specific
+sample_outputs/
+
+# OS-specific
+.DS_Store
+Thumbs.db
