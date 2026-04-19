@@ -7,8 +7,8 @@ A four-capability document processing pipeline built for the Rodriguez foreclosu
 | Capability | Description |
 |---|---|
 | Document Processing | Cleans OCR noise and extracts structured data from title searches, servicer emails, and court orders |
-| Grounded Retrieval | Chunks and embeds documents locally, retrieves relevant passages, makes citations inspectable |
-| Draft Generation | Produces Title Review Summary, Case Status Memo, Document Checklist, and Action Item Extract — grounded in retrieved evidence |
+| Grounded Retrieval | Chunks and embeds documents locally, retrieves relevant passages, and makes citations inspectable |
+| Draft Generation | Produces Title Review Summary, Case Status Memo, Document Checklist, and Action Item Extract grounded in retrieved evidence |
 | Improvement from Edits | Analyzes operator edit pairs, extracts writing patterns, applies them to future generations |
 
 ## Requirements
@@ -76,7 +76,7 @@ docker compose up
 - `pipeline` service: runs `python run_pipeline.py` and saves outputs to `sample_outputs/`
 - `api` service: runs the FastAPI server on port 8000
 
-The `sample_outputs/` directory is mounted as a volume so generated files are accessible on the host.
+The `sample_outputs/` directory is mounted as a volume, so generated files are accessible on the host.
 
 ## Project structure
 
