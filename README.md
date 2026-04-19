@@ -122,7 +122,7 @@ README.md            this file
 
 ## Swapping the LLM provider
 
-All LLM calls go through `genai.GenerativeModel` in each module. To switch to OpenAI, replace those calls with `openai.chat.completions.create` — the prompt text is the same. Update `GEMINI_MODEL` in `config.py` and add `OPENAI_API_KEY` to `.env`.
+All LLM calls go through `genai.GenerativeModel` in each module. To switch to OpenAI, replace those calls with `openai.chat.completions.create`; the prompt text is the same. Update `GEMINI_MODEL` in `config.py` and add `OPENAI_API_KEY` to `.env`.
 
 ## Notes
 
